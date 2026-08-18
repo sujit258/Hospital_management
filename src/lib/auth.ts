@@ -7,6 +7,7 @@ import { hospitalSlugFromHost } from "./tenant";
 import { permissionsForRole } from "./rbac";
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET ?? "development-secret-change-me",
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   providers: [
