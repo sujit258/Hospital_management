@@ -56,7 +56,7 @@ export default async function PrescriptionsPage() {
 
       {/* Prescriptions Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {prescriptions.map((rx) => (
+        {prescriptions.map((rx: any) => (
           <div 
             key={rx.id} 
             className="group relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300"
@@ -94,7 +94,7 @@ export default async function PrescriptionsPage() {
 
                 <div className="pt-2 border-t border-slate-100">
                   <div className="space-y-1">
-                    {rx.items.slice(0, 3).map((item) => (
+                    {rx.items.slice(0, 3).map((item: any) => (
                       <div key={item.id} className="flex items-center gap-2 text-xs text-slate-600">
                         <Pill size={10} className="text-emerald-500" />
                         <span>{item.remedy} {item.potency}</span>

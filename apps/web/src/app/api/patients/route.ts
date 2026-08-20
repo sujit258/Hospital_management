@@ -28,9 +28,9 @@ export async function GET() {
       ...(isDoctor
         ? {
             OR: [
-              { appointments: { some: { practitioner: { userId: session.user.id } } } },
-              { encounters: { some: { practitioner: { userId: session.user.id } } } },
-              { prescriptions: { some: { practitioner: { userId: session.user.id } } } }
+              { appointments: { some: { doctor: { userId: session.user.id } } } },
+              { consultations: { some: { doctor: { userId: session.user.id } } } },
+              { prescriptions: { some: { doctor: { userId: session.user.id } } } }
             ]
           }
         : {})
@@ -85,7 +85,12 @@ export async function POST(req: Request) {
     data: {
       clinicId: session.user.clinicId,
       userId: user?.id,
-      gender: data.gender,
+      patientCode: `PAT-${Date.now()}`,
+      firstName: data.name.split(" ")[0] || "Unknown",
+      fullName: data.name || "Unknown",
+      dateOfBirth: new Date(),
+      phone: data.phone || "",
+      gender: data.gender || "OTHER",
       notes: data.notes
     }
   });

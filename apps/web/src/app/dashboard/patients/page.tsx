@@ -59,7 +59,7 @@ export default async function PatientsPage() {
 
       {/* Patients Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {patients.map((patient) => (
+        {patients.map((patient: any) => (
           <Link 
             key={patient.id} 
             href={`/dashboard/patients/${patient.id}`}

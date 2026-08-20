@@ -8,7 +8,7 @@ export default async function ConsultationsPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.clinicId) redirect("/auth/login");
 
-  const consultations = await prisma.consultations.findMany({
+  const consultations = await prisma.consultation.findMany({
     where: {
       clinicId: session.user.clinicId,
       ...(session.user.role === "PATIENT" ? { patient: { userId: session.user.id } } : {}),
@@ -17,7 +17,7 @@ export default async function ConsultationsPage() {
     include: {
       patient: true,
       doctor: { include: { user: true } },
-      prescription: { include: { items: true } }
+      prescriptions: { include: { items: true } }
     },
     orderBy: { createdAt: "desc" },
     take: 40

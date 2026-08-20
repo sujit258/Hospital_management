@@ -9,7 +9,7 @@ const appointmentSchema = z.object({
   practitionerId: z.string(),
   start: z.string(),
   end: z.string(),
-  status: z.enum(["BOOKED", "CONFIRMED", "CHECKED_IN", "COMPLETED", "NO_SHOW", "CANCELLED"]).optional()
+  status: z.enum(["SCHEDULED", "CONFIRMED", "CHECKED_IN", "COMPLETED", "NO_SHOW", "CANCELLED"]).optional()
 });
 
 export async function GET() {
@@ -25,10 +25,10 @@ export async function GET() {
     where: {
       clinicId: session.user.clinicId,
       ...(isPatient ? { patient: { userId: session.user.id } } : {}),
-      ...(isDoctor ? { practitioner: { userId: session.user.id } } : {})
+      ...(isDoctor ? { doctor: { userId: session.user.id } } : {})
     },
-    orderBy: { start: "asc" },
-    include: { patient: true, practitioner: { include: { user: true } } }
+    orderBy: { startTime: "asc" },
+    include: { patient: true, doctor: { include: { user: true } } }
   });
   return NextResponse.json({ appointments });
 }
@@ -48,10 +48,12 @@ export async function POST(req: Request) {
     data: {
       clinicId: session.user.clinicId,
       patientId: data.patientId,
-      practitionerId: data.practitionerId,
-      start: new Date(data.start),
-      end: new Date(data.end),
-      status: data.status ?? "BOOKED"
+      doctorId: data.practitionerId,
+      appointmentDate: new Date(data.start),
+      startTime: new Date(data.start),
+      endTime: new Date(data.end),
+      type: "NEW_CONSULTATION",
+      status: data.status ?? "SCHEDULED"
     }
   });
 

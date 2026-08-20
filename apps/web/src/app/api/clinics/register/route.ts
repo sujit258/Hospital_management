@@ -30,8 +30,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if clinic slug already exists
-    const existingClinic = await prisma.clinic.findUnique({
-      where: { slug: clinicSlug }
+    const existingClinic = await prisma.clinic.findFirst({
+      where: {
+        OR: [{ slug: clinicSlug }]
+      },
     });
 
     if (existingClinic) {
@@ -41,20 +43,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if clinic code already exists
-    const existingCode = await prisma.clinic.findUnique({
-      where: { code: clinicCode }
-    });
-
-    if (existingCode) {
-      return NextResponse.json(
-        { error: "Clinic code already exists" },
-        { status: 409 }
-      );
-    }
-
     // Check if admin email already exists
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await prisma.user.findFirst({
       where: { email: adminEmail }
     });
 
@@ -75,11 +65,10 @@ export async function POST(req: NextRequest) {
         data: {
           name: clinicName,
           slug: clinicSlug,
-          code: clinicCode,
           address: clinicAddress || null,
           city: clinicCity || null,
           state: clinicState || null,
-          zip: clinicZip || null,
+          pincode: clinicZip || null,
           phone: adminPhone,
           isActive: true
         }
@@ -114,7 +103,6 @@ export async function POST(req: NextRequest) {
       success: true,
       clinicId: result.clinic.id,
       clinicSlug: result.clinic.slug,
-      clinicCode: result.clinic.code,
       adminEmail: result.user.email,
       message: "Clinic created successfully"
     });

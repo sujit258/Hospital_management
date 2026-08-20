@@ -27,21 +27,8 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const isPatient = session.user.role === "PATIENT";
-  const isDoctor = session.user.role === "DOCTOR";
-
-  const invoices = await prisma.invoice.findMany({
-    take: 50,
-    where: {
-      clinicId: session.user.clinicId,
-      ...(isPatient ? { patient: { userId: session.user.id } } : {}),
-      ...(isDoctor ? { encounter: { practitioner: { userId: session.user.id } } } : {})
-    },
-    orderBy: { createdAt: "desc" },
-    include: { patient: true, payments: true, items: true }
-  });
-
-  return NextResponse.json({ invoices });
+  // Invoice model not yet implemented in schema
+  return NextResponse.json({ invoices: [] });
 }
 
 export async function POST(req: Request) {
@@ -50,31 +37,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await req.json();
-  const parsed = invoiceSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-
-  const data = parsed.data;
-  const invoice = await prisma.invoice.create({
-    data: {
-      clinicId: session.user.clinicId,
-      patientId: data.patientId,
-      encounterId: data.encounterId,
-      amountDue: data.amountDue,
-      status: data.status ?? "PENDING",
-      items: data.items
-        ? {
-            create: data.items.map((item) => ({
-              description: item.description,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              taxRate: item.taxRate ?? 0
-            }))
-          }
-        : undefined
-    },
-    include: { items: true }
-  });
-
-  return NextResponse.json({ invoice }, { status: 201 });
+  // Invoice model not yet implemented in schema
+  return NextResponse.json({ error: "Invoice model not yet implemented" }, { status: 501 });
 }

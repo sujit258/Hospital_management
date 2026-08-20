@@ -66,7 +66,7 @@ export default async function FollowUpsPage() {
 
       {/* Follow-ups Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {followUps.map((followUp) => (
+        {followUps.map((followUp: any) => (
           <div 
             key={followUp.id} 
             className="group relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300"
