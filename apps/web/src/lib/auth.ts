@@ -19,10 +19,7 @@ export const authOptions: NextAuthOptions = {
         clinicCode: { label: "Clinic Code", type: "text" }
       },
       async authorize(credentials, req) {
-        console.log("[AUTH] Authorize called", { email: credentials?.email, hasPassword: !!credentials?.password });
-        
         if (!credentials?.email || !credentials?.password) {
-          console.log("[AUTH] Missing credentials");
           return null;
         }
 
@@ -30,8 +27,6 @@ export const authOptions: NextAuthOptions = {
         const slugFromHost = clinicSlugFromHost(host);
         const clinicCode = String(credentials.clinicCode ?? "").trim().toLowerCase();
         const tenantHint = clinicCode || slugFromHost;
-
-        console.log("[AUTH] Clinic lookup", { host, slugFromHost, clinicCode, tenantHint });
 
         let clinic = null;
         const parsedHost = host?.split(":")[0]?.toLowerCase();
@@ -48,9 +43,7 @@ export const authOptions: NextAuthOptions = {
           clinic = await prisma.clinic.findFirst({ where: { isActive: true }, orderBy: { createdAt: "asc" } });
         }
 
-        console.log("[AUTH] Clinic found", { found: !!clinic, active: clinic?.isActive });
         if (!clinic || !clinic.isActive) {
-          console.log("[AUTH] Clinic not found or inactive");
           return null;
         }
 
@@ -61,14 +54,11 @@ export const authOptions: NextAuthOptions = {
           }
         });
 
-        console.log("[AUTH] User found", { found: !!user, hasPassword: !!user?.password });
         if (!user || !user.password) {
-          console.log("[AUTH] User not found or no password");
           return null;
         }
         
         const valid = await bcrypt.compare(credentials.password, user.password);
-        console.log("[AUTH] Password valid", { valid });
         if (!valid) return null;
 
         const permissions = permissionsForRole(user.role);

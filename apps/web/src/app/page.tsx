@@ -272,7 +272,7 @@ export default function HomePage() {
                     ))}
                   </div>
                   <p className="text-lg text-slate-700 mb-6 leading-relaxed italic">
-                    "{testimonial.content}"
+                    &ldquo;{testimonial.content}&rdquo;
                   </p>
                   <div className="flex items-center gap-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-bold">

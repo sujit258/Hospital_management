@@ -29,7 +29,6 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
   const transporter = createTransporter();
   
   if (!transporter) {
-    console.log("Email not sent: SMTP not configured");
     return false;
   }
 
@@ -42,7 +41,6 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       text: options.text,
     });
 
-    console.log("Email sent:", info.messageId);
     return true;
   } catch (error) {
     console.error("Email sending failed:", error);
