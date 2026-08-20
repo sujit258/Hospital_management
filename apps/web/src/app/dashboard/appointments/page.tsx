@@ -57,7 +57,7 @@ export default async function AppointmentsPage() {
 
       {/* Appointments Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {appointments.map((apt) => (
+        {appointments.map((apt: any) => (
           <div 
             key={apt.id} 
             className="group relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300"
