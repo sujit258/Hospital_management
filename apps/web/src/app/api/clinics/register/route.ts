@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendClinicWelcomeEmail } from "@/lib/email";
 import bcrypt from "bcryptjs";
+import { Prisma } from "@prisma/client";
 
 export async function POST(req: NextRequest) {
   try {
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
     // Create clinic and admin user in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Create clinic
       const clinic = await tx.clinic.create({
         data: {
