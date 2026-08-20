@@ -14,7 +14,7 @@ const patientSchema = z.object({
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.hospitalId) {
+  if (!session?.user?.clinicId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -23,7 +23,7 @@ export async function GET() {
   const patients = await prisma.patient.findMany({
     take: 50,
     where: {
-      hospitalId: session.user.hospitalId,
+      clinicId: session.user.clinicId,
       ...(isPatient ? { userId: session.user.id } : {}),
       ...(isDoctor
         ? {
@@ -43,7 +43,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.hospitalId) {
+  if (!session?.user?.clinicId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     user = await prisma.user.findFirst({
       where: {
         email: data.email,
-        hospitalId: session.user.hospitalId
+        clinicId: session.user.clinicId
       }
     });
 
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
     } else {
       user = await prisma.user.create({
         data: {
-          hospitalId: session.user.hospitalId,
+          clinicId: session.user.clinicId,
           email: data.email,
           name: data.name,
           phone: data.phone,
@@ -83,7 +83,7 @@ export async function POST(req: Request) {
 
   const patient = await prisma.patient.create({
     data: {
-      hospitalId: session.user.hospitalId,
+      clinicId: session.user.clinicId,
       userId: user?.id,
       gender: data.gender,
       notes: data.notes

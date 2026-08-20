@@ -19,7 +19,7 @@ function generateRegistrationNumber() {
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.hospitalId) {
+  if (!session?.user?.clinicId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -28,7 +28,7 @@ export async function GET() {
   }
 
   const registrations = await prisma.patientRegistration.findMany({
-    where: { hospitalId: session.user.hospitalId },
+    where: { clinicId: session.user.clinicId },
     orderBy: { createdAt: "desc" },
     take: 50
   });
@@ -38,7 +38,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.hospitalId) {
+  if (!session?.user?.clinicId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const existing = await prisma.patientRegistration.findFirst({
       where: {
-        hospitalId: session.user.hospitalId,
+        clinicId: session.user.clinicId,
         registrationNumber
       }
     });
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
 
   const registration = await prisma.patientRegistration.create({
     data: {
-      hospitalId: session.user.hospitalId,
+      clinicId: session.user.clinicId,
       registrationNumber,
       fullName: payload.fullName,
       phone: payload.phone,

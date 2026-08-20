@@ -14,7 +14,7 @@ const appointmentSchema = z.object({
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.hospitalId) {
+  if (!session?.user?.clinicId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -23,7 +23,7 @@ export async function GET() {
   const appointments = await prisma.appointment.findMany({
     take: 50,
     where: {
-      hospitalId: session.user.hospitalId,
+      clinicId: session.user.clinicId,
       ...(isPatient ? { patient: { userId: session.user.id } } : {}),
       ...(isDoctor ? { practitioner: { userId: session.user.id } } : {})
     },
@@ -35,7 +35,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.hospitalId) {
+  if (!session?.user?.clinicId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
   const data = parsed.data;
   const appointment = await prisma.appointment.create({
     data: {
-      hospitalId: session.user.hospitalId,
+      clinicId: session.user.clinicId,
       patientId: data.patientId,
       practitionerId: data.practitionerId,
       start: new Date(data.start),
