@@ -60,7 +60,7 @@ export async function sendClinicWelcomeEmail(
 ): Promise<boolean> {
   const baseUrl = process.env.APP_URL || "http://localhost:3000";
   const loginUrl = `${baseUrl}/auth/login?clinicCode=${clinicCode}`;
-  const clinicUrl = `${clinicSlug}.${process.env.APP_BASE_DOMAIN || "localhost"}`;
+  const clinicUrl = `${clinicSlug}.${process.env.APP_BASE_DOMAIN || "clinik-blush.vercel.app"}`;
 
   const html = `
     <!DOCTYPE html>

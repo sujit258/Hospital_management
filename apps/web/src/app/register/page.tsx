@@ -96,7 +96,7 @@ export default function RegisterPage() {
             </p>
             <div className="rounded-lg bg-emerald-50 p-4 text-sm text-emerald-700">
               <p className="font-semibold">Your clinic subdomain:</p>
-              <p className="text-lg font-mono">{formData.clinicSlug}.homeoclinic.com</p>
+              <p className="text-lg font-mono">{formData.clinicSlug}.clinik-blush.vercel.app</p>
             </div>
           </div>
         </div>
@@ -153,7 +153,7 @@ export default function RegisterPage() {
                     className="w-full rounded-l-lg border border-slate-300 border-r-0 px-4 py-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
                   />
                   <div className="absolute right-0 top-0 flex h-full items-center rounded-r-lg bg-slate-100 px-4 text-sm text-slate-600 border border-l-0 border-slate-300">
-                    .homeoclinic.com
+                    .clinik-blush.vercel.app
                   </div>
                 </div>
                 {errors.clinicSlug && <p className="mt-1 text-sm text-rose-600">{errors.clinicSlug}</p>}

@@ -35,7 +35,7 @@ const features = [
 ];
 
 const benefits = [
-  "Get your own clinic subdomain (yourclinic.homeoclinic.com)",
+  "Get your own clinic subdomain (yourclinic.clinik-blush.vercel.app)",
   "Complete patient and practice management",
   "Homeopathic-specific documentation tools",
   "Automated appointment reminders",
