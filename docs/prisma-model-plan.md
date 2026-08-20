@@ -1,3 +1,44 @@
+# HOMEOPATHIC CLINIC SaaS - Prisma Model Plan
+
+## Model Migration Strategy
+
+### Existing Models (Keep & Extend)
+- **Hospital** → Rename to **Clinic**
+- **User** → Extend with new roles
+- **Patient** → Extend with homeopathic fields
+- **Practitioner** → Rename to **DoctorProfile**
+- **Appointment** → Extend with new types
+- **Encounter** → Rename to **Consultation**
+- **Prescription** → Extend with homeopathic items
+- **AuditLog** → Keep, extend for AI events
+- **Permission** → Keep
+- **RolePermission** → Keep
+- **UserPermission** → Keep
+
+### New Models (Add)
+- **ConsentRecord** - Consent management
+- **AIArtifact** - AI intermediate artifacts
+- **AIAuditEvent** - AI-specific audit events
+- **WhatsAppTemplate** - WhatsApp message templates
+- **WhatsAppMessage** - WhatsApp message tracking
+- **FollowUp** - Follow-up management
+- **FileAsset** - File storage management
+- **ImportedRecord** - Notebook import records
+- **Feedback** - Patient feedback
+- **Notification** - Notification system
+
+### Models to Remove
+- **PatientRegistration** - Replace with proper patient registration flow
+- **ContentPage** - Not needed for MVP
+- **BlogPost** - Not needed for MVP
+- **Media** - Replace with FileAsset
+- **Invoice** - Keep but simplify for MVP
+- **InvoiceItem** - Keep but simplify for MVP
+- **Payment** - Keep but simplify for MVP
+
+## Complete Prisma Schema
+
+```prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -25,7 +66,7 @@ model Clinic {
   email                String?
   logo                 String?
   
-  // AI Settings (Simplified)
+  // AI Settings
   aiEnabled            Boolean               @default(false)
   aiProvider           String?
   aiModel              String?
@@ -42,12 +83,15 @@ model Clinic {
   consultations        Consultation[]
   prescriptions        Prescription[]
   followUps            FollowUp[]
+  consentRecords       ConsentRecord[]
+  aiArtifacts          AIArtifact[]
   aiAuditEvents        AIAuditEvent[]
   whatsappTemplates    WhatsAppTemplate[]
   whatsappMessages     WhatsAppMessage[]
   feedback             Feedback[]
   notifications        Notification[]
   fileAssets           FileAsset[]
+  importedRecords      ImportedRecord[]
   auditLogs            AuditLog[]
   rolePermissions      RolePermission[]
   userPermissions      UserPermission[]
@@ -81,6 +125,9 @@ model User {
   
   auditLogs       AuditLog[]
   userPermissions UserPermission[]
+  
+  // AI Review tracking
+  reviewedAiArtifacts AIArtifact[] @relation("AIReviewer")
   
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
@@ -117,7 +164,6 @@ model DoctorProfile {
   appointments  Appointment[]
   consultations Consultation[]
   prescriptions Prescription[]
-  followUps      FollowUp[]
   
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
@@ -175,7 +221,10 @@ model Patient {
   appointments         Appointment[]
   prescriptions        Prescription[]
   followUps            FollowUp[]
+  consentRecords       ConsentRecord[]
+  aiArtifacts          AIArtifact[]
   feedback             Feedback[]
+  importedRecords      ImportedRecord[]
   
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
@@ -271,6 +320,9 @@ model Consultation {
   
   // Follow-up
   followUpDate   DateTime?
+  
+  // AI Reference
+  aiArtifactId   String?
   
   prescriptions  Prescription[]
   followUps      FollowUp[]
@@ -379,6 +431,155 @@ enum FollowUpStatus {
 }
 
 // ============================================
+// CONSENT RECORD
+// ============================================
+
+model ConsentRecord {
+  id             String        @id @default(cuid())
+  clinic         Clinic        @relation(fields: [clinicId], references: [id])
+  clinicId       String
+  patient        Patient       @relation(fields: [patientId], references: [id])
+  patientId      String
+  
+  purpose        ConsentPurpose
+  version        String
+  noticeVersion  String
+  
+  givenAt        DateTime
+  withdrawnAt    DateTime?
+  method         ConsentMethod
+  language       String        @default("en")
+  
+  metadata       String?
+  
+  createdAt      DateTime      @default(now())
+
+  @@index([clinicId])
+  @@index([patientId])
+  @@index([purpose])
+}
+
+enum ConsentPurpose {
+  CLINIC_SERVICE
+  AI_ORGANIZATION
+  AI_SUMMARIZATION
+  VOICE_PROCESSING
+  NOTEBOOK_IMPORT
+  WHATSAPP_COMMUNICATION
+}
+
+enum ConsentMethod {
+  WEB_FORM
+  MOBILE_APP
+  PAPER_FORM
+  VERBAL
+}
+
+// ============================================
+// AI ARTIFACT
+// ============================================
+
+model AIArtifact {
+  id             String          @id @default(cuid())
+  clinic         Clinic?         @relation(fields: [clinicId], references: [id])
+  clinicId       String?
+  patient        Patient?        @relation(fields: [patientId], references: [id])
+  patientId      String?
+  
+  sourceType     String
+  sourceId       String?
+  
+  aiTask         AITask
+  modelProvider  String
+  modelVersion   String
+  
+  inputReference String?
+  output         String          @db.Text
+  
+  confidence     Float?
+  fieldConfidence String?        @db.Text // JSON
+  
+  status         AIArtifactStatus @default(GENERATED)
+  
+  reviewedBy     String?
+  reviewedAt     DateTime?
+  
+  // Reviewer relation
+  reviewer       User?           @relation("AIReviewer", fields: [reviewedById], references: [id])
+  reviewedById   String?
+  
+  expiresAt      DateTime?
+  
+  createdAt      DateTime        @default(now())
+
+  @@index([clinicId])
+  @@index([patientId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+enum AITask {
+  CONSULTATION_NOTES
+  PATIENT_SUMMARY
+  WHATSAPP_EXTRACTION
+  NOTEBOOK_OCR
+}
+
+enum AIArtifactStatus {
+  GENERATED
+  VALIDATING
+  AWAITING_REVIEW
+  REVIEWED
+  APPROVED
+  REJECTED
+  COMMITTED
+  FAILED
+  EXPIRED
+}
+
+// ============================================
+// AI AUDIT EVENT
+// ============================================
+
+model AIAuditEvent {
+  id             String        @id @default(cuid())
+  clinic         Clinic        @relation(fields: [clinicId], references: [id])
+  clinicId       String
+  userId         String?
+  
+  action         AIAuditAction
+  entityType     String?
+  entityId       String?
+  requestId      String?
+  
+  metadata       String?       @db.Text
+  
+  createdAt      DateTime      @default(now())
+
+  @@index([clinicId])
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+enum AIAuditAction {
+  AI_REQUESTED
+  AI_STARTED
+  AI_COMPLETED
+  AI_FAILED
+  AI_VALIDATION_FAILED
+  AI_REVIEWED
+  AI_FIELD_EDITED
+  AI_FIELD_ACCEPTED
+  AI_FIELD_REJECTED
+  AI_APPROVED
+  AI_REJECTED
+  AI_COMMITTED
+  AI_EXPIRED
+  AI_SAFETY_FLAGGED
+}
+
+// ============================================
 // WHATSAPP TEMPLATE
 // ============================================
 
@@ -414,7 +615,7 @@ model WhatsAppMessage {
   id             String              @id @default(cuid())
   clinic         Clinic              @relation(fields: [clinicId], references: [id])
   clinicId       String
-  template       WhatsAppTemplate? @relation(fields: [templateId], references: [id])
+  template       WhatsAppTemplate?
   templateId     String?
   
   patientId      String?
@@ -561,39 +762,58 @@ model FileAsset {
 }
 
 // ============================================
-// SIMPLIFIED AI AUDIT EVENT
+// IMPORTED RECORD
 // ============================================
 
-model AIAuditEvent {
+model ImportedRecord {
   id             String        @id @default(cuid())
   clinic         Clinic        @relation(fields: [clinicId], references: [id])
   clinicId       String
-  userId         String?
+  patient        Patient?      @relation(fields: [patientId], references: [id])
+  patientId      String?
   
-  action         AIAuditAction
-  entityType     String?
-  entityId       String?
-  requestId      String?
+  importBatchId  String
+  sourceType     ImportSourceType
   
-  metadata       String?       @db.Text
+  // Extracted Data
+  extractedData  String        @db.Text // JSON
+  
+  // OCR Results
+  ocrConfidence  Float?
+  ocrLanguage   String?
+  
+  // Status
+  status         ImportStatus  @default(PENDING_REVIEW)
+  
+  reviewedBy     String?
+  reviewedAt     DateTime?
+  
+  // Source File
+  fileAssetId    String?
   
   createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   @@index([clinicId])
-  @@index([userId])
-  @@index([action])
-  @@index([createdAt])
+  @@index([patientId])
+  @@index([importBatchId])
+  @@index([status])
 }
 
-enum AIAuditAction {
-  AI_REQUESTED
-  AI_STARTED
-  AI_COMPLETED
-  AI_FAILED
-  AI_VALIDATION_FAILED
-  AI_APPROVED
-  AI_REJECTED
-  AI_SAFETY_FLAGGED
+enum ImportSourceType {
+  NOTEBOOK_PHOTO
+  NOTEBOOK_PDF
+  PRESCRIPTION_IMAGE
+  LAB_REPORT
+  DISCHARGE_SUMMARY
+}
+
+enum ImportStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  NEEDS_REVIEW
+  IMPORTED
 }
 
 // ============================================
@@ -667,3 +887,97 @@ enum Role {
   RECEPTIONIST
   PATIENT
 }
+```
+
+## Migration Steps
+
+### Phase 1: Schema Restructuring
+1. Rename `Hospital` to `Clinic`
+2. Rename `Practitioner` to `DoctorProfile`
+3. Rename `Encounter` to `Consultation`
+4. Update all foreign key references
+5. Remove unused models (ContentPage, BlogPost, Media, PatientRegistration)
+
+### Phase 2: Extend Existing Models
+1. Extend `Clinic` with AI and WhatsApp settings
+2. Extend `User` with isActive and avatar
+3. Extend `Patient` with homeopathic fields and patientCode
+4. Extend `DoctorProfile` with homeopathic qualifications
+5. Extend `Appointment` with new types and statuses
+6. Extend `Consultation` with homeopathic fields
+7. Refactor `Prescription` to use `PrescriptionItem` relation
+
+### Phase 3: Add New Models
+1. Add `ConsentRecord` and related enums
+2. Add `AIArtifact` and `AIAuditEvent` with enums
+3. Add `WhatsAppTemplate` and `WhatsAppMessage` with enums
+4. Add `FollowUp` with enums
+5. Add `FileAsset`
+6. Add `ImportedRecord` with enums
+7. Add `Feedback` with enums
+8. Add `Notification` with enums
+
+### Phase 4: Update Enums
+1. Update `Role` enum (remove hospital-specific roles)
+2. Add new enums for AI, WhatsApp, Consent, etc.
+
+## Data Migration Strategy
+
+### Patient Code Generation
+- Generate patient codes for existing patients
+- Format: HC-000001, HC-000002, etc.
+- Use database sequence or counter
+
+### Role Migration
+- Map existing roles to new roles:
+  - HOSPITAL_ADMIN → CLINIC_ADMIN
+  - FRONT_DESK → RECEPTIONIST
+  - Remove unused roles
+
+### Data Cleanup
+- Remove orphaned records
+- Clean up unused models
+- Update foreign key references
+
+## Index Strategy
+
+### Performance-Critical Indexes
+- `Clinic`: slug, isActive
+- `User`: clinicId, role
+- `Patient`: clinicId, phone, dateOfBirth
+- `Appointment`: clinicId, patientId, doctorId, appointmentDate, status
+- `Consultation`: clinicId, patientId, doctorId
+- `FollowUp`: clinicId, patientId, dueDate, status
+- `AIArtifact`: clinicId, patientId, status, expiresAt
+- `WhatsAppMessage`: clinicId, patientId, status, createdAt
+
+### Security-Critical Indexes
+- Audit logs by clinic, actor, entity, time
+- AI audit events by clinic, user, action, time
+- Consent records by clinic, patient, purpose
+
+## Validation Rules
+
+### Patient Code
+- Must be unique per clinic
+- Format: HC-XXXXXX
+- Auto-generated on backend
+
+### Phone Numbers
+- Must be valid Indian phone format
+- WhatsApp number optional but must be valid if provided
+
+### Dates
+- Date of birth must be in the past
+- Appointment dates must be in the future (for new appointments)
+- Follow-up dates must be after consultation date
+
+### AI Artifacts
+- Must have valid status transitions
+- Cannot skip review for clinical tasks
+- Must expire after configurable period
+
+### Consent
+- Must have valid purpose
+- Cannot be withdrawn for past processing
+- Must record version and timestamp

@@ -20,20 +20,23 @@
     "baseUrl": "./",
     "paths": {
       "@/*": [
-        "./src/*"
+        "./apps/web/src/*"
+      ],
+      "@homeo-clinic/types": [
+        "./packages/types/src"
+      ],
+      "@homeo-clinic/validation": [
+        "./packages/validation/src"
+      ],
+      "@homeo-clinic/config": [
+        "./packages/config/src"
+      ],
+      "@homeo-clinic/ui": [
+        "./packages/ui/src"
       ]
     },
     "types": [
-      "node",
-      "next",
-      "next/types/global",
-      "next/navigation",
-      "next-auth"
-    ],
-    "plugins": [
-      {
-        "name": "next"
-      }
+      "node"
     ]
   },
   "include": [
@@ -46,6 +49,8 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "dist",
+    "build"
   ]
 }
