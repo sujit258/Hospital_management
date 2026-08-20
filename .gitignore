@@ -12,3 +12,9 @@ pnpm-debug.log*
 out
 .idea
 .vscode/
+.vercel
+.env*.local
+dist
+build
+*.log
+turbo

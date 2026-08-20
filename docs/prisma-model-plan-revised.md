@@ -1,3 +1,44 @@
+# HOMEOPATHIC CLINIC SaaS - Prisma Model Plan (Simplified Scope)
+
+## Model Migration Strategy (Simplified)
+
+### Existing Models (Keep & Extend)
+- **Hospital** → Rename to **Clinic**
+- **User** → Extend with new roles
+- **Patient** → Extend with homeopathic fields
+- **Practitioner** → Rename to **DoctorProfile**
+- **Appointment** → Extend with new types
+- **Encounter** → Rename to **Consultation**
+- **Prescription** → Extend with homeopathic items
+- **AuditLog** → Keep, extend for AI events
+- **Permission** → Keep
+- **RolePermission** → Keep
+- **UserPermission** → Keep
+
+### New Models to Add (Simplified)
+- **WhatsAppTemplate** - WhatsApp message templates
+- **WhatsAppMessage** - WhatsApp message tracking
+- **FollowUp** - Follow-up management
+- **FileAsset** - File storage management
+- **Feedback** - Patient feedback
+- **Notification** - Notification system
+- **AIAuditEvent** - Simplified AI audit events
+
+### Models to Remove (Simplified Scope)
+- **PatientRegistration** - Replace with proper patient registration flow
+- **ContentPage** - Not needed for MVP
+- **BlogPost** - Not needed for MVP
+- **Media** - Replace with FileAsset
+- **Invoice** - Keep but simplify for MVP
+- **InvoiceItem** - Keep but simplify for MVP
+- **Payment** - Keep but simplify for MVP
+- **ConsentRecord** - Out of scope for simplified MVP
+- **AIArtifact** - Out of scope for simplified MVP (no complex artifact workflow)
+- **ImportedRecord** - Out of scope for simplified MVP (no notebook OCR)
+
+## Complete Simplified Prisma Schema
+
+```prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -117,7 +158,6 @@ model DoctorProfile {
   appointments  Appointment[]
   consultations Consultation[]
   prescriptions Prescription[]
-  followUps      FollowUp[]
   
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
@@ -414,7 +454,7 @@ model WhatsAppMessage {
   id             String              @id @default(cuid())
   clinic         Clinic              @relation(fields: [clinicId], references: [id])
   clinicId       String
-  template       WhatsAppTemplate? @relation(fields: [templateId], references: [id])
+  template       WhatsAppTemplate?
   templateId     String?
   
   patientId      String?
@@ -667,3 +707,94 @@ enum Role {
   RECEPTIONIST
   PATIENT
 }
+```
+
+## Migration Steps (Simplified)
+
+### Phase 1: Schema Restructuring
+1. Rename `Hospital` to `Clinic`
+2. Rename `Practitioner` to `DoctorProfile`
+3. Rename `Encounter` to `Consultation`
+4. Update all foreign key references
+5. Remove unused models (ContentPage, BlogPost, Media, PatientRegistration)
+6. Remove complex AI models (ConsentRecord, AIArtifact, ImportedRecord)
+
+### Phase 2: Extend Existing Models
+1. Extend `Clinic` with simplified AI and WhatsApp settings
+2. Extend `User` with isActive and avatar
+3. Extend `Patient` with homeopathic fields and patientCode
+4. Extend `DoctorProfile` with homeopathic qualifications
+5. Extend `Appointment` with new types and statuses
+6. Extend `Consultation` with homeopathic fields
+7. Refactor `Prescription` to use `PrescriptionItem` relation
+
+### Phase 3: Add New Models (Simplified)
+1. Add `WhatsAppTemplate` and `WhatsAppMessage` with enums
+2. Add `FollowUp` with enums
+3. Add `FileAsset`
+4. Add `Feedback` with enums
+5. Add `Notification` with enums
+6. Add simplified `AIAuditEvent` with enums
+
+### Phase 4: Update Enums
+1. Update `Role` enum (remove hospital-specific roles)
+2. Add new enums for WhatsApp, simplified AI, etc.
+
+## Data Migration Strategy
+
+### Patient Code Generation
+- Generate patient codes for existing patients
+- Format: HC-000001, HC-000002, etc.
+- Use database sequence or counter
+
+### Role Migration
+- Map existing roles to new roles:
+  - HOSPITAL_ADMIN → CLINIC_ADMIN
+  - FRONT_DESK → RECEPTIONIST
+  - Remove unused roles
+
+### Data Cleanup
+- Remove orphaned records
+- Clean up unused models
+- Update foreign key references
+
+## Index Strategy (Simplified)
+
+### Performance-Critical Indexes
+- `Clinic`: slug, isActive
+- `User`: clinicId, role
+- `Patient`: clinicId, phone, dateOfBirth
+- `Appointment`: clinicId, patientId, doctorId, appointmentDate, status
+- `Consultation`: clinicId, patientId, doctorId
+- `FollowUp`: clinicId, patientId, dueDate, status
+- `WhatsAppMessage`: clinicId, patientId, status, createdAt
+
+### Security-Critical Indexes
+- Audit logs by clinic, actor, entity, time
+- AI audit events by clinic, user, action, time
+
+## Validation Rules (Simplified)
+
+### Patient Code
+- Must be unique per clinic
+- Format: HC-XXXXXX
+- Auto-generated on backend
+
+### Phone Numbers
+- Must be valid Indian phone format
+- WhatsApp number optional but must be valid if provided
+
+### Dates
+- Date of birth must be in the past
+- Appointment dates must be in the future (for new appointments)
+- Follow-up dates must be after consultation date
+
+### WhatsApp Messages
+- Must have valid phone number
+- Templates must be approved by Meta
+- Status transitions must be valid
+
+### AI Audit Events
+- Must have valid action types
+- Must record timestamp
+- Must link to clinic and user where applicable
